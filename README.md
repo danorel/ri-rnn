@@ -1,6 +1,6 @@
-# foobar
+# ri-rnn
 
-foobar is a Python project for dealing with ...
+ri-rnn is a Python project for dealing with ...
 
 ## Installation & Contributing
 
