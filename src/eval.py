@@ -9,7 +9,7 @@ from src.model import RNN
 from src.utils import one_hot_encoding
 
 def load_model() -> RNN:
-    filepath = pathlib.Path(f'{MODELS_DIR}/final_state_dict.pth')
+    filepath = pathlib.Path(f'{MODELS_DIR}/5_state_dict.pth')
     if not filepath.exists():
         raise RuntimeError("Not found pre-trained RNN model")
     return torch.load(filepath)
@@ -18,21 +18,27 @@ def generate(model: RNN, prompt: str, char_to_index: dict, index_to_char: dict, 
     if len(prompt) < sequence_size:
         raise RuntimeError("Starting characters should have at least 16 symbols")
     
-    embedding_tensor = one_hot_encoding(torch.tensor([char_to_index[char] for char in prompt[-sequence_size:]], dtype=torch.long), vocab_size).unsqueeze(0)
+    sequence_embedding = one_hot_encoding(torch.tensor([char_to_index[char] for char in prompt[-sequence_size:]], dtype=torch.long), vocab_size).unsqueeze(0)
     chars = copy.deepcopy(prompt.split('\s'))
 
     model.eval()
     hidden_state = model.init_hidden()
-    for _ in range(output_size - len(prompt)):
+
+    char = None
+    i = 0
+    while i < (output_size - len(prompt)) and char != '\n':
         with torch.no_grad():
-            logits_tensor, hidden_state = model(embedding_tensor, hidden_state)
-            logits_probs = torch.softmax(logits_tensor[-1], dim=-1).data
+            logits, hidden_state = model(sequence_embedding, hidden_state)
+            logits_probs = torch.softmax(logits[:, -1, :], dim=-1).data
 
         char_idx = torch.multinomial(logits_probs, 1).item()
-        char_tensor = one_hot_encoding(torch.tensor([char_idx]), vocab_size).unsqueeze(0)
-        chars.append(index_to_char[char_idx])
+        char = index_to_char[char_idx]
+        chars.append(char)
 
-        embedding_tensor = torch.cat((embedding_tensor[:, 1:, :], char_tensor), dim=1)
+        char_embedding = one_hot_encoding(torch.tensor([char_idx]), vocab_size).unsqueeze(0)
+        sequence_embedding = torch.cat((sequence_embedding[:, 1:, :], char_embedding), dim=1)
+
+        i += 1
 
     return ''.join(chars)
 

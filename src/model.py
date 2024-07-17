@@ -65,13 +65,13 @@ class RNN(nn.Module):
         if h is None:
             h = torch.zeros(batch_size, self.hidden_size, device=x.device) 
         
-        outputs = []
+        o = []
         for i in range(sequence_size):
             h = self.rnn_cell(x[:, i, :], h)
-            outputs.append(h)
-        outputs = torch.stack(outputs, dim=1)
-        output = self.dropout(self.decoder(outputs[:, -1, :]))
-        return output, h
+            o.append(self.decoder(self.dropout(h)))
+        o = torch.stack(o, dim=1)
+
+        return o, h
     
     def init_hidden(self, batch_size: t.Optional[int] = 1):
         return torch.zeros(batch_size, self.hidden_size)

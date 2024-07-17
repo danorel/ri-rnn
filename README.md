@@ -1,6 +1,6 @@
 # ri-rnn
 
-ri-rnn is a Python project which is dealing with RNN re-implementation. The idea is to understand the model details and how text generation can be trained via RNN.
+ri-rnn is a Python project which is dealing with RNN re-implementation. The idea is to understand the model details and how character-level language modelling can be trained via RNN.
 
 ## Installation & Contributing
 

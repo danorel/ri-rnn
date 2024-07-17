@@ -35,28 +35,29 @@ def train(corpus: str, epochs: int, dropout: float, sequence_size: int, batch_si
     model_dir.mkdir(parents=True, exist_ok=True)
 
     model.train()
-    for epoch in tqdm(range(epochs)):
+    for epoch in tqdm(range(1, epochs + 1)):
         total_loss = 0
         hidden_state = model.init_hidden(batch_size)
 
-        for batch, (embedding_batch_tensor, target_batch_tensor) in enumerate(dataloader(corpus, char_to_index, vocab_size, sequence_size, batch_size)):
-            logits_batch_tensor, hidden_state = model(embedding_batch_tensor, hidden_state)
-            hidden_state = hidden_state.detach()
-            
-            batch_loss = criterion(logits_batch_tensor, target_batch_tensor)
-            
+        for batch, (embedding, target) in enumerate(dataloader(corpus, char_to_index, vocab_size, sequence_size, batch_size)):
             optimizer.zero_grad()
-            batch_loss.backward()
+            
+            logits, hidden_state = model(embedding, hidden_state)
+            hidden_state = hidden_state.detach()
+
+            loss = criterion(logits.view(-1, vocab_size), target.view(-1))
+            
+            loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
             
-            batch_loss = batch_loss.item()
-            total_loss += batch_loss
+            loss = loss.item()
+            total_loss += loss
 
             if batch % 100 == 0:
-                print(f"Epoch {epoch+1}/{3}, Batch Loss (batch = {batch}): {batch_loss:.4f}")
+                print(f"Epoch {epoch}/{epochs}, Batch Loss (batch = {batch}): {loss:.4f}")
         
-        print(f"Epoch {epoch+1}/{5}, Total Loss: {total_loss:.4f}")
+        print(f"Epoch {epoch}/{epochs}, Total Loss: {total_loss:.4f}")
         torch.save(model, model_dir / f'{epoch}_state_dict.pth')
 
     torch.save(model, model_dir / 'final_state_dict.pth')
@@ -74,11 +75,11 @@ if __name__ == '__main__':
                         help='The size of each input sequence')
     parser.add_argument('--batch_size', type=int, default=512,
                         help='Number of samples in each batch')
-    parser.add_argument('--learning_rate', type=int, default=0.001,
+    parser.add_argument('--learning_rate', type=float, default=0.001,
                         help='Learning rate parameter of RNN optimizer (Adam is a default setting)')
-    parser.add_argument('--weight_decay', type=int, default=0.001,
+    parser.add_argument('--weight_decay', type=float, default=0.001,
                         help='Weight decay parameter of RNN optimizer (Adam is a default setting) which serves for weights normalization to avoid overfitting')
-
+    
     args = parser.parse_args()
 
     corpus = fetch_and_load_corpus(args.url)
