@@ -19,7 +19,7 @@ def train(corpus: str, epochs: int, dropout: float, sequence_size: int, batch_si
 
     vocab_size = len(vocab)
     hidden_size = vocab_size * 4
-
+    
     model = RNN(
         input_size=vocab_size,
         hidden_size=hidden_size,

@@ -32,6 +32,20 @@ python -m src.train --epochs 5 --sequence_size 32 --dropout 0.3 --batch_size 256
 python -m src.eval --url https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt --prompt_text 'Forecasting for you' --output_size 100
 ```
 
+## Experiments
+
+1. Trained a character-level language model:
+
+```bash
+python -m src.train --url https://github.com/karpathy/char-rnn/blob/master/data/tinyshakespeare/input.txt --epochs 10 --dropout 0.2 --learning_rate 0.0005 --sequence_size 64
+```
+
+2. Prompt on a pre-trained character-level language model:
+
+```bash
+python -m src.eval --url https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt --prompt_text 'I am a soldier of your heart, like a sunshine in your mind, and I love you as the' --output_size 128 --sequence_size 64
+```
+
 ## License
 
 [MIT](./LICENSE)

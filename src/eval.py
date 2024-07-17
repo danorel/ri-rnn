@@ -9,14 +9,14 @@ from src.model import RNN
 from src.utils import one_hot_encoding
 
 def load_model() -> RNN:
-    filepath = pathlib.Path(f'{MODELS_DIR}/5_state_dict.pth')
+    filepath = pathlib.Path(f'{MODELS_DIR}/1_state_dict.pth')
     if not filepath.exists():
         raise RuntimeError("Not found pre-trained RNN model")
     return torch.load(filepath)
 
 def generate(model: RNN, prompt: str, char_to_index: dict, index_to_char: dict, vocab_size: int, sequence_size: int = 16, output_size: int = 100) -> str:
     if len(prompt) < sequence_size:
-        raise RuntimeError("Starting characters should have at least 16 symbols")
+        raise RuntimeError(f"Starting characters should have at least {sequence_size} symbols")
     
     sequence_embedding = one_hot_encoding(torch.tensor([char_to_index[char] for char in prompt[-sequence_size:]], dtype=torch.long), vocab_size).unsqueeze(0)
     chars = copy.deepcopy(prompt.split('\s'))
