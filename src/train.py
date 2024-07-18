@@ -9,10 +9,10 @@ from tqdm import tqdm
 from src.constants import MODELS_DIR
 from src.corpus_loader import fetch_and_load_corpus
 from src.data_loader import dataloader
-from src.model import RNN, init_weights
+from src.model.base import init_weights
+from src.model import model_selector
 
-
-def train(corpus: str, epochs: int, dropout: float, sequence_size: int, batch_size: int, learning_rate: float, weight_decay: float):
+def train(corpus: str, name: str, epochs: int, dropout: float, sequence_size: int, batch_size: int, learning_rate: float, weight_decay: float):
     vocab = sorted(set(corpus))
 
     char_to_index = {char: idx for idx, char in enumerate(vocab)}
@@ -20,18 +20,19 @@ def train(corpus: str, epochs: int, dropout: float, sequence_size: int, batch_si
     vocab_size = len(vocab)
     hidden_size = vocab_size * 4
     
-    model = RNN(
-        input_size=vocab_size,
-        hidden_size=hidden_size,
-        output_size=vocab_size,
-        dropout=dropout
-    )
+    hyperparameters = {
+        "input_size": vocab_size,
+        "hidden_size": hidden_size,
+        "output_size": vocab_size,
+        "dropout": dropout
+    }
+    model = model_selector[name](**hyperparameters)
     model.apply(init_weights)
     
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
-    model_dir = pathlib.Path(MODELS_DIR)
+    model_dir = pathlib.Path(MODELS_DIR) / model.name
     model_dir.mkdir(parents=True, exist_ok=True)
 
     model.train()
@@ -63,8 +64,10 @@ def train(corpus: str, epochs: int, dropout: float, sequence_size: int, batch_si
     torch.save(model, model_dir / 'final_state_dict.pth')
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Train a RNN model on a specified text corpus.")
+    parser = argparse.ArgumentParser(description="Train a RNN-like model on a specified text corpus.")
     
+    parser.add_argument('--name', type=str, required=True, choices=['rnn', 'bidirectional', 'stacked'],
+                    help='Model to use as a basis for text generation (e.g., "bidirectional")')
     parser.add_argument('--url', type=str, default='https://ocw.mit.edu/ans7870/6/6.006/s08/lecturenotes/files/t8.shakespeare.txt',
                         help='URL to fetch the text corpus')
     parser.add_argument('--epochs', type=int, default=3,
@@ -84,4 +87,4 @@ if __name__ == '__main__':
 
     corpus = fetch_and_load_corpus(args.url)
     
-    train(corpus, args.epochs, args.dropout, args.sequence_size, args.batch_size, args.learning_rate, args.weight_decay)
+    train(corpus, args.name, args.epochs, args.dropout, args.sequence_size, args.batch_size, args.learning_rate, args.weight_decay)

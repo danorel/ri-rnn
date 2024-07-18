@@ -174,5 +174,5 @@ poetry.toml
 .DS_Store
 
 # Custom
-rnn
-corpus
+models/
+corpus/

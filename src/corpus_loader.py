@@ -13,6 +13,10 @@ def fetch_text(url) -> str:
     else:
         raise ValueError(f"Expected text/plain content, but got {content_type}")
 
+def preprocess(corpus: str):
+    corpus = corpus.lower()
+    return corpus
+
 def fetch_and_load_corpus(url: str) -> str:
     filename = url.split('/')[-1]
     filepath = pathlib.Path(f'{CORPUS_DIR}/{filename}')
@@ -20,8 +24,8 @@ def fetch_and_load_corpus(url: str) -> str:
     if filepath.exists():
         with open(filepath, 'r+') as f:
             corpus = f.read()
-            return corpus
-    corpus = fetch_text(url)
-    with open(filepath, 'w+') as f:
-        f.write(corpus)
-        return corpus
+    else:
+        corpus = fetch_text(url)
+        with open(filepath, 'w+') as f:
+            f.write(corpus)
+    return preprocess(corpus)

@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import typing as t
 
 def init_weights(m):
     if isinstance(m, nn.Linear):
@@ -36,42 +35,3 @@ class RNNCell(nn.Module):
         x_gate = torch.matmul(x, self.weight_xh.T) + self.bias_xh
         h_gate = torch.matmul(h, self.weight_hh.T) + self.bias_hh
         return self.dropout(torch.tanh(x_gate + h_gate))
-
-class RNN(nn.Module):
-    def __init__(
-        self,
-        input_size: int,
-        hidden_size: int,
-        output_size: int,
-        dropout: float = 0.5
-    ):
-        super(RNN, self).__init__()
-
-        self.hidden_size = hidden_size
-
-        self.rnn_cell = RNNCell(
-            input_size=input_size,
-            hidden_size=hidden_size,
-            dropout=dropout
-        )
-        self.decoder = nn.Linear(
-            in_features=hidden_size,
-            out_features=output_size
-        )
-        self.dropout = nn.Dropout(dropout)
-
-    def forward(self, x: torch.Tensor, h = None):
-        batch_size, sequence_size, _ = x.size()
-        if h is None:
-            h = torch.zeros(batch_size, self.hidden_size, device=x.device) 
-        
-        o = []
-        for i in range(sequence_size):
-            h = self.rnn_cell(x[:, i, :], h)
-            o.append(self.decoder(self.dropout(h)))
-        o = torch.stack(o, dim=1)
-
-        return o, h
-    
-    def init_hidden(self, batch_size: t.Optional[int] = 1):
-        return torch.zeros(batch_size, self.hidden_size)

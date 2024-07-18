@@ -1,20 +1,21 @@
 import argparse
 import copy
 import torch
+import torch.nn as nn
 import pathlib
 
 from src.constants import MODELS_DIR
 from src.corpus_loader import fetch_and_load_corpus
-from src.model import RNN
 from src.utils import one_hot_encoding
 
-def load_model() -> RNN:
-    filepath = pathlib.Path(f'{MODELS_DIR}/1_state_dict.pth')
+def load_model(name: str) -> nn.Module:
+    models_dir = pathlib.Path(MODELS_DIR)
+    filepath = models_dir / name / '2_state_dict.pth'
     if not filepath.exists():
         raise RuntimeError("Not found pre-trained RNN model")
     return torch.load(filepath)
 
-def generate(model: RNN, prompt: str, char_to_index: dict, index_to_char: dict, vocab_size: int, sequence_size: int = 16, output_size: int = 100) -> str:
+def generate(model: nn.Module, prompt: str, char_to_index: dict, index_to_char: dict, vocab_size: int, sequence_size: int = 16, output_size: int = 100) -> str:
     if len(prompt) < sequence_size:
         raise RuntimeError(f"Starting characters should have at least {sequence_size} symbols")
     
@@ -42,20 +43,22 @@ def generate(model: RNN, prompt: str, char_to_index: dict, index_to_char: dict, 
 
     return ''.join(chars)
 
-def prompt(corpus: str, text: str, sequence_size: int, output_size: int):
+def prompt(corpus: str, name: str, text: str, sequence_size: int, output_size: int):
     vocab = sorted(set(corpus))
 
     char_to_index = {char: idx for idx, char in enumerate(vocab)}
     index_to_char = {idx: char for idx, char in enumerate(vocab)}
 
     vocab_size = len(vocab)
-    model = load_model()
+    model = load_model(name)
 
     return generate(model, text, char_to_index, index_to_char, vocab_size, sequence_size, output_size)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Generate text based on a arbitrary corpus.")
     
+    parser.add_argument('--name', type=str, required=True, choices=['rnn', 'bidirectional', 'stacked'],
+                        help='Model to use as a basis for text generation (e.g., "bidirectional")')
     parser.add_argument('--url', type=str, default='https://ocw.mit.edu/ans7870/6/6.006/s08/lecturenotes/files/t8.shakespeare.txt',
                         help='URL to fetch the corpus (e.g., Shakespeare corpus: "https://ocw.mit.edu/ans7870/6/6.006/s08/lecturenotes/files/t8.shakespeare.txt")')
     parser.add_argument('--prompt_text', type=str, required=True,
@@ -69,4 +72,4 @@ if __name__ == '__main__':
 
     corpus = fetch_and_load_corpus(args.url)
     
-    print(prompt(corpus, args.prompt_text, args.sequence_size, args.output_size))
+    print(prompt(corpus, args.name, args.prompt_text, args.sequence_size, args.output_size))
