@@ -1,4 +1,4 @@
-# ri-rnn
+# ya-rnn
 
 ### Prerequisite
 
@@ -10,13 +10,13 @@
 1. Install python virtual environment:
 
 ```shell
-pyenv virtualenv 3.11.3 ri-rnn_3.11.3
+pyenv virtualenv 3.11.3 ya-rnn_3.11.3
 ```
 
 2. Activate python virtual env
 
 ```shell
-pyenv activate ri-rnn_3.11.3
+pyenv activate ya-rnn_3.11.3
 ```
 
 3. Install python dependencies from requirements.txt:
