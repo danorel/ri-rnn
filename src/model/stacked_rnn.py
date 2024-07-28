@@ -18,31 +18,28 @@ class StackedRNN(nn.Module):
         super(StackedRNN, self).__init__()
 
         self.name = "stacked_rnn"
+
+        self.stack_size = stack_size
         self.hidden_size = hidden_size
         self.output_size = output_size
 
-        self.layers = nn.ModuleList([])
+        self.layers = nn.ModuleList()
         self.layers.append(RNN(input_size, hidden_size, hidden_size, dropout))
-        self.layers.extend([
-            RNN(hidden_size, hidden_size, hidden_size, dropout)
-            for _ in range(stack_size - 2)
-        ])
+        for _ in range(stack_size - 2):
+            self.layers.append(RNN(hidden_size, hidden_size, hidden_size, dropout))
         self.layers.append(RNN(hidden_size, hidden_size, output_size, dropout))
 
-    def forward(self, x: torch.Tensor, hi = None):
-        if hi is None:
-            hi = self.init_hidden(x.size(0))
+    def forward(self, x: torch.Tensor, h = None):
+        if h is None:
+            h = self.init_hidden(x.size(0))
 
         o = x.clone()
+        hn = torch.zeros_like(h)
         for layer, rnn in enumerate(self.layers):
-            o, h = rnn(o, hi[layer])
-            hi[layer] = h
+            o, hi = rnn(o, h[layer])
+            hn[layer] = hi
 
-        return o, hi
+        return o, hn
     
     def init_hidden(self, batch_size: t.Optional[int] = 1):
-        last_layer = len(self.layers) - 1
-        return [
-            torch.zeros(batch_size, self.output_size if layer == last_layer else self.hidden_size)
-            for layer in range(len(self.layers))
-        ]
+        return torch.zeros(self.stack_size, batch_size, self.hidden_size)

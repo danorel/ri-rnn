@@ -26,7 +26,7 @@ def train(corpus: str, name: str, epochs: int, dropout: float, sequence_size: in
         "output_size": vocab_size,
         "dropout": dropout
     }
-    model = model_selector[name](**hyperparameters)
+    model: nn.Module = model_selector[name](**hyperparameters)
     model.apply(init_weights)
     
     criterion = nn.CrossEntropyLoss()
@@ -34,7 +34,7 @@ def train(corpus: str, name: str, epochs: int, dropout: float, sequence_size: in
 
     model_dir = pathlib.Path(MODELS_DIR) / model.name
     model_dir.mkdir(parents=True, exist_ok=True)
-
+    
     model.train()
     for epoch in tqdm(range(1, epochs + 1)):
         total_loss = 0

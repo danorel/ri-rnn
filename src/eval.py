@@ -10,7 +10,7 @@ from src.utils import one_hot_encoding
 
 def load_model(name: str) -> nn.Module:
     models_dir = pathlib.Path(MODELS_DIR)
-    filepath = models_dir / name / '2_state_dict.pth'
+    filepath = models_dir / name / 'final_state_dict.pth'
     if not filepath.exists():
         raise RuntimeError("Not found pre-trained RNN model")
     return torch.load(filepath)
@@ -37,7 +37,7 @@ def generate(model: nn.Module, prompt: str, char_to_index: dict, index_to_char: 
         chars.append(char)
 
         char_embedding = one_hot_encoding(torch.tensor([char_idx]), vocab_size).unsqueeze(0)
-        sequence_embedding = torch.cat((sequence_embedding[:, 1:, :], char_embedding), dim=1)
+        sequence_embedding = torch.cat((sequence_embedding[:, -sequence_size:, :], char_embedding), dim=1)
 
         i += 1
 
